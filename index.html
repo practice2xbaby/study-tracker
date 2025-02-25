@@ -20,7 +20,7 @@
 </head>
 <body>
 
-    <h2>Study Time Tracker</h2>
+    <h2>Monthly Study Time Tracker</h2>
 
     <label for="date">Date:</label>
     <input type="date" id="date">
@@ -152,7 +152,8 @@
 
             // Calculate monthly average
             let totalMonths = Object.keys(monthlyTotals).length;
-            let monthlyAvg = totalMonths ? (Object.values(monthlyTotals).reduce((a, b) => a + b, 0) / 60) / totalMonths : 0;
+            let daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            let monthlyAvg = totalMinutesThisMonth / 60 / daysInMonth;
 
             // Update UI
             document.getElementById('weeklyTotal').textContent = (weeklyTotal / 60).toFixed(2); // Convert minutes to hours
