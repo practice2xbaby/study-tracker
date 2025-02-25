@@ -72,6 +72,11 @@
             const dateObj = new Date(dateInput);
             const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}-${dateObj.getFullYear()}`;
 
+            // Check if it's the first day of a new month
+            if (dateObj.getDate() === 1) {
+                resetData();
+            }
+
             const existingIndex = studyData.labels.indexOf(formattedDate);
 
             if (existingIndex !== -1) {
@@ -94,6 +99,16 @@
             // Clear input fields
             document.getElementById('date').value = '';
             document.getElementById('minutes').value = '';
+        }
+
+        function resetData() {
+            alert("New month detected! Resetting all data.");
+            localStorage.removeItem('studyData'); // Clear LocalStorage
+            studyData = { labels: [], data: [] }; // Reset data
+            studyChart.data.labels = [];
+            studyChart.data.datasets[0].data = [];
+            studyChart.update();
+            updateStatistics();
         }
 
         function clearData() {
