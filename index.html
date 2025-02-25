@@ -8,7 +8,7 @@
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         input, button { margin: 5px; padding: 8px; font-size: 16px; }
-        canvas { max-width: 600px; margin: 20px auto; }
+        canvas { max-width: 600px; margin: 20px auto; display: block; }
     </style>
 </head>
 <body>
@@ -22,20 +22,24 @@
     <input type="number" id="minutes" placeholder="Enter minutes">
 
     <button onclick="addData()">Add Data</button>
+    <button onclick="clearData()" style="background: red; color: white;">Clear Data</button>
 
     <canvas id="studyChart"></canvas>
 
     <script>
         const ctx = document.getElementById('studyChart').getContext('2d');
 
-        // Initial empty chart
+        // Load saved data from LocalStorage
+        let studyData = JSON.parse(localStorage.getItem('studyData')) || { labels: [], data: [] };
+
+        // Create the chart
         const studyChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: [],
+                labels: studyData.labels,
                 datasets: [{
                     label: 'Minutes Spent Studying',
-                    data: [],
+                    data: studyData.data,
                     backgroundColor: 'rgba(75, 192, 192, 0.6)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
@@ -57,14 +61,26 @@
                 return;
             }
 
-            studyChart.data.labels.push(date);
-            studyChart.data.datasets[0].data.push(Number(minutes));
+            studyData.labels.push(date);
+            studyData.data.push(Number(minutes));
+
+            localStorage.setItem('studyData', JSON.stringify(studyData)); // Save to LocalStorage
 
             studyChart.update();
 
             // Clear input fields
             document.getElementById('date').value = '';
             document.getElementById('minutes').value = '';
+        }
+
+        function clearData() {
+            if (confirm("Are you sure you want to clear all data?")) {
+                localStorage.removeItem('studyData'); // Clear LocalStorage
+                studyData = { labels: [], data: [] }; // Reset data
+                studyChart.data.labels = [];
+                studyChart.data.datasets[0].data = [];
+                studyChart.update();
+            }
         }
     </script>
 
