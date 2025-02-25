@@ -9,6 +9,7 @@
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         input, button { margin: 5px; padding: 8px; font-size: 16px; }
         canvas { max-width: 600px; margin: 20px auto; display: block; }
+        .stats { margin-top: 20px; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -26,6 +27,12 @@
 
     <canvas id="studyChart"></canvas>
 
+    <div class="stats">
+        <p><strong>Weekly Total Hours:</strong> <span id="weeklyTotal">0</span> hrs</p>
+        <p><strong>Weekly Average Hours:</strong> <span id="weeklyAvg">0</span> hrs</p>
+        <p><strong>Monthly Average Hours:</strong> <span id="monthlyAvg">0</span> hrs</p>
+    </div>
+
     <script>
         const ctx = document.getElementById('studyChart').getContext('2d');
 
@@ -40,8 +47,8 @@
                 datasets: [{
                     label: 'Minutes Spent Studying',
                     data: studyData.data,
-                    backgroundColor: 'rgba(255, 182, 193, 0.6)',  // Baby pink with transparency
-                    borderColor: 'rgba(255, 182, 193, 1)',       // Solid baby pink border
+                    backgroundColor: 'rgba(255, 182, 193, 0.6)',  // Baby pink (light)
+                    borderColor: 'rgba(255, 182, 193, 1)',        // Baby pink (solid)
                     borderWidth: 1
                 }]
             },
@@ -82,6 +89,8 @@
             studyChart.data.datasets[0].data = studyData.data;
             studyChart.update();
 
+            updateStatistics();
+
             // Clear input fields
             document.getElementById('date').value = '';
             document.getElementById('minutes').value = '';
@@ -94,8 +103,44 @@
                 studyChart.data.labels = [];
                 studyChart.data.datasets[0].data = [];
                 studyChart.update();
+                updateStatistics();
             }
         }
+
+        function updateStatistics() {
+            let weeklyTotals = {};
+            let monthlyTotals = {};
+
+            studyData.labels.forEach((date, index) => {
+                let [month, day, year] = date.split('-').map(Number);
+                let fullDate = new Date(year, month - 1, day);
+                let weekStart = new Date(fullDate);
+                weekStart.setDate(fullDate.getDate() - fullDate.getDay()); // Get start of the week (Sunday)
+
+                let weekKey = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
+                let monthKey = `${year}-${String(month).padStart(2, '0')}`;
+
+                weeklyTotals[weekKey] = (weeklyTotals[weekKey] || 0) + studyData.data[index];
+                monthlyTotals[monthKey] = (monthlyTotals[monthKey] || 0) + studyData.data[index];
+            });
+
+            // Calculate weekly total and average
+            let lastWeek = Object.keys(weeklyTotals).sort().pop();
+            let weeklyTotal = weeklyTotals[lastWeek] || 0;
+            let weeklyAvg = (weeklyTotal / 7) / 60; // Convert minutes to hours
+
+            // Calculate monthly average
+            let totalMonths = Object.keys(monthlyTotals).length;
+            let monthlyAvg = totalMonths ? (Object.values(monthlyTotals).reduce((a, b) => a + b, 0) / totalMonths) / 60 : 0;
+
+            // Update UI
+            document.getElementById('weeklyTotal').textContent = (weeklyTotal / 60).toFixed(2); // Convert minutes to hours
+            document.getElementById('weeklyAvg').textContent = weeklyAvg.toFixed(2);
+            document.getElementById('monthlyAvg').textContent = monthlyAvg.toFixed(2);
+        }
+
+        // Initialize statistics on page load
+        updateStatistics();
     </script>
 
 </body>
