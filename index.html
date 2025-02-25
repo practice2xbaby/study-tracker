@@ -152,7 +152,7 @@
 
             // Calculate monthly average
             let totalMonths = Object.keys(monthlyTotals).length;
-            let monthlyAvg = totalMonths ? (Object.values(monthlyTotals).reduce((a, b) => a + b, 0) / totalMonths) / 60 : 0;
+            let monthlyAvg = totalMonths ? (Object.values(monthlyTotals).reduce((a, b) => a + b, 0) / 60) / totalMonths : 0;
 
             // Update UI
             document.getElementById('weeklyTotal').textContent = (weeklyTotal / 60).toFixed(2); // Convert minutes to hours
