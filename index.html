@@ -18,10 +18,10 @@
     <label for="date">Date:</label>
     <input type="date" id="date">
     
-    <label for="minutes">Enter Time:</label>
-    <input type="number" id="minutes" placeholder="Enter minutes studied">
+    <label for="minutes">Minutes:</label>
+    <input type="number" id="minutes" placeholder="Enter minutes">
 
-    <button onclick="addData()">Enter Time</button>
+    <button onclick="addOrUpdateData()">Add/Update Data</button>
     <button onclick="clearData()" style="background: red; color: white;">Clear Data</button>
 
     <canvas id="studyChart"></canvas>
@@ -52,7 +52,7 @@
             }
         });
 
-        function addData() {
+        function addOrUpdateData() {
             const dateInput = document.getElementById('date').value;
             const minutes = document.getElementById('minutes').value;
 
@@ -65,11 +65,21 @@
             const dateObj = new Date(dateInput);
             const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}-${dateObj.getFullYear()}`;
 
-            studyData.labels.push(formattedDate);
-            studyData.data.push(Number(minutes));
+            const existingIndex = studyData.labels.indexOf(formattedDate);
+
+            if (existingIndex !== -1) {
+                // Update existing data
+                studyData.data[existingIndex] = Number(minutes);
+            } else {
+                // Add new data
+                studyData.labels.push(formattedDate);
+                studyData.data.push(Number(minutes));
+            }
 
             localStorage.setItem('studyData', JSON.stringify(studyData)); // Save to LocalStorage
 
+            studyChart.data.labels = studyData.labels;
+            studyChart.data.datasets[0].data = studyData.data;
             studyChart.update();
 
             // Clear input fields
