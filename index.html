@@ -53,15 +53,19 @@
         });
 
         function addData() {
-            const date = document.getElementById('date').value;
+            const dateInput = document.getElementById('date').value;
             const minutes = document.getElementById('minutes').value;
 
-            if (!date || !minutes) {
+            if (!dateInput || !minutes) {
                 alert("Please enter both date and minutes!");
                 return;
             }
 
-            studyData.labels.push(date);
+            // Convert YYYY-MM-DD to MM-DD-YYYY
+            const dateObj = new Date(dateInput);
+            const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}-${dateObj.getFullYear()}`;
+
+            studyData.labels.push(formattedDate);
             studyData.data.push(Number(minutes));
 
             localStorage.setItem('studyData', JSON.stringify(studyData)); // Save to LocalStorage
