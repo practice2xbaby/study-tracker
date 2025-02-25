@@ -161,8 +161,8 @@
             let weeklyAvg = (weeklyTotal / 7) / 60; // Convert minutes to hours
         
             // Calculate monthly average
-            let daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            let monthlyAvg = totalMinutesThisMonth / 60 / daysInMonth;
+            let daysPassed = now.getDate(); // Get how many days have passed in the current month
+            let monthlyAvg = totalMinutesThisMonth / 60 / daysPassed;
         
             // Update UI
             document.getElementById('weeklyTotal').textContent = (weeklyTotal / 60).toFixed(2); // Convert minutes to hours
