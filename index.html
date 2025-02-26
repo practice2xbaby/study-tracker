@@ -3,24 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monthly Study Time Tracker</title>
+    <title>Study Timer Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         input, button { margin: 5px; padding: 8px; font-size: 16px; }
-        canvas { 
-            width: 800px !important; /* Adjust width */
-            height: 400px !important; /* Adjust height */
-            max-width: 100%;
-            margin: 20px auto;
-            display: block; 
-        }
-        .stats { margin-top: 20px; font-size: 18px; }
+        canvas { width: 800px !important; height: 400px !important; max-width: 50%; margin: 20px auto; display: block; }
+        .stats, .timer-section { margin-top: 20px; font-size: 18px; }
     </style>
 </head>
 <body>
-
-    <h2>Monthly Study Time Tracker</h2>
+    <h2>Study Time Tracker</h2>
 
     <label for="date">Date:</label>
     <input type="date" id="date">
@@ -30,149 +23,110 @@
 
     <button onclick="addOrUpdateData()">Add/Update Data</button>
     <button onclick="clearData()" style="background: red; color: white;">Clear Data</button>
+    
+    <div class="timer-section">
+        <h3>Study Timer</h3>
+        <input type="number" id="timerHours" min="0" max="24" placeholder="Hours">
+        <input type="number" id="timerMinutes" min="0" max="59" placeholder="Minutes">
+        <input type="number" id="timerSeconds" min="0" max="59" placeholder="Seconds">
+        <button onclick="startTimer()">Start Timer</button>
+        <button onclick="stopTimer()">Stop Timer</button>
+        <p id="timerDisplay">00:00:00</p>
+    </div>
 
     <canvas id="studyChart"></canvas>
 
     <div class="stats">
         <p><strong>Weekly Total Hours:</strong> <span id="weeklyTotal">0</span> hrs</p>
         <p><strong>Weekly Average Hours:</strong> <span id="weeklyAvg">0</span> hrs</p>
-        <p><strong>Average per day:</strong> <span id="monthlyAvg">0</span> hrs</p>
+        <p><strong>Monthly Average Hours:</strong> <span id="monthlyAvg">0</span> hrs</p>
     </div>
 
     <script>
+        let timerInterval, startTime;
+        let elapsedSeconds = 0;
         const ctx = document.getElementById('studyChart').getContext('2d');
-
-        // Load saved data from LocalStorage
         let studyData = JSON.parse(localStorage.getItem('studyData')) || { labels: [], data: [] };
 
-        // Create the chart
         const studyChart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: studyData.labels,
-                datasets: [{
-                    label: 'Minutes Spent Studying',
-                    data: studyData.data,
-                    backgroundColor: 'rgba(255, 182, 193, 0.6)',  // Baby pink (light)
-                    borderColor: 'rgba(255, 182, 193, 1)',        // Baby pink (solid)
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
+            data: { labels: studyData.labels, datasets: [{
+                label: 'Minutes Spent Studying',
+                data: studyData.data,
+                backgroundColor: 'rgba(255, 182, 193, 0.6)',
+                borderColor: 'rgba(255, 182, 193, 1)',
+                borderWidth: 1
+            }] },
+            options: { scales: { y: { beginAtZero: true } } }
         });
 
-        function addOrUpdateData() {
-            const dateInput = document.getElementById('date').value;
-            const minutes = document.getElementById('minutes').value;
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            const hours = parseInt(document.getElementById('timerHours').value) || 0;
+            const minutes = parseInt(document.getElementById('timerMinutes').value) || 0;
+            const seconds = parseInt(document.getElementById('timerSeconds').value) || 0;
+            elapsedSeconds = (hours * 3600) + (minutes * 60) + seconds;
+            if (elapsedSeconds <= 0) { alert("Set a valid timer!"); return; }
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
 
-            if (!dateInput || !minutes) {
-                alert("Please enter both date and minutes!");
+        function updateTimer() {
+            let now = Date.now();
+            let timePassed = Math.floor((now - startTime) / 1000);
+            let remaining = elapsedSeconds - timePassed;
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('timerDisplay').textContent = "00:00:00";
+                addStudyTime(elapsedSeconds / 60);
                 return;
             }
+            let hrs = Math.floor(remaining / 3600);
+            let mins = Math.floor((remaining % 3600) / 60);
+            let secs = remaining % 60;
+            document.getElementById('timerDisplay').textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
 
-            // Convert YYYY-MM-DD to MM-DD-YYYY
-            const dateObj = new Date(dateInput);
-            const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}-${dateObj.getFullYear()}`;
+        function stopTimer() {
+            if (!timerInterval) return;
+            clearInterval(timerInterval);
+            let totalElapsed = Math.floor((Date.now() - startTime) / 1000) / 60;
+            addStudyTime(totalElapsed);
+        }
 
-            // Check if it's the first day of a new month
-            if (dateObj.getDate() === 1) {
-                resetData();
-            }
-
+        function addStudyTime(minutes) {
+            let today = new Date();
+            let formattedDate = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}-${today.getFullYear()}`;
             const existingIndex = studyData.labels.indexOf(formattedDate);
-
-            if (existingIndex !== -1) {
-                // Update existing data
-                studyData.data[existingIndex] = Number(minutes);
-            } else {
-                // Add new data
-                studyData.labels.push(formattedDate);
-                studyData.data.push(Number(minutes));
-            }
-
-            localStorage.setItem('studyData', JSON.stringify(studyData)); // Save to LocalStorage
-
+            if (existingIndex !== -1) studyData.data[existingIndex] += minutes;
+            else { studyData.labels.push(formattedDate); studyData.data.push(minutes); }
+            localStorage.setItem('studyData', JSON.stringify(studyData));
             studyChart.data.labels = studyData.labels;
             studyChart.data.datasets[0].data = studyData.data;
             studyChart.update();
-
             updateStatistics();
-
-            // Clear input fields
-            document.getElementById('date').value = '';
-            document.getElementById('minutes').value = '';
         }
 
-        function resetData() {
-            alert("New month detected! Resetting all data.");
-            localStorage.removeItem('studyData'); // Clear LocalStorage
-            studyData = { labels: [], data: [] }; // Reset data
-            studyChart.data.labels = [];
-            studyChart.data.datasets[0].data = [];
-            studyChart.update();
-            updateStatistics();
+        function updateStatistics() {
+            let totalMinutes = studyData.data.reduce((a, b) => a + b, 0);
+            let weeklyTotal = totalMinutes / 60;
+            let daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+            let monthlyAvg = (totalMinutes / daysInMonth) / 60;
+            document.getElementById('weeklyTotal').textContent = weeklyTotal.toFixed(2);
+            document.getElementById('weeklyAvg').textContent = (weeklyTotal / 7).toFixed(2);
+            document.getElementById('monthlyAvg').textContent = monthlyAvg.toFixed(2);
         }
 
         function clearData() {
             if (confirm("Are you sure you want to clear all data?")) {
-                localStorage.removeItem('studyData'); // Clear LocalStorage
-                studyData = { labels: [], data: [] }; // Reset data
+                localStorage.removeItem('studyData');
+                studyData = { labels: [], data: [] };
                 studyChart.data.labels = [];
                 studyChart.data.datasets[0].data = [];
                 studyChart.update();
                 updateStatistics();
             }
         }
-
-        function updateStatistics() {
-            let weeklyTotals = {};
-            let monthlyTotals = {};
-            let totalMinutesThisMonth = 0;
-        
-            let now = new Date(); // Get current date
-            let currentYear = now.getFullYear();
-            let currentMonth = now.getMonth(); // 0-indexed (0 = January, 11 = December)
-        
-            studyData.labels.forEach((date, index) => {
-                let [month, day, year] = date.split('-').map(Number);
-                let fullDate = new Date(year, month - 1, day);
-                let weekStart = new Date(fullDate);
-                weekStart.setDate(fullDate.getDate() - fullDate.getDay()); // Get start of the week (Sunday)
-        
-                let weekKey = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
-                let monthKey = `${year}-${String(month).padStart(2, '0')}`;
-        
-                weeklyTotals[weekKey] = (weeklyTotals[weekKey] || 0) + studyData.data[index];
-                monthlyTotals[monthKey] = (monthlyTotals[monthKey] || 0) + studyData.data[index];
-        
-                // Track total minutes for the current month
-                if (year === currentYear && month - 1 === currentMonth) {
-                    totalMinutesThisMonth += studyData.data[index];
-                }
-            });
-        
-            // Calculate weekly total and average
-            let lastWeek = Object.keys(weeklyTotals).sort().pop();
-            let weeklyTotal = weeklyTotals[lastWeek] || 0;
-            let weeklyAvg = (weeklyTotal / 7) / 60; // Convert minutes to hours
-        
-            // Calculate monthly average
-            let daysPassed = now.getDate(); // Get how many days have passed in the current month
-            let monthlyAvg = totalMinutesThisMonth / 60 / daysPassed;
-        
-            // Update UI
-            document.getElementById('weeklyTotal').textContent = (weeklyTotal / 60).toFixed(2); // Convert minutes to hours
-            document.getElementById('weeklyAvg').textContent = weeklyAvg.toFixed(2);
-            document.getElementById('monthlyAvg').textContent = monthlyAvg.toFixed(2);
-        }
-
-        // Initialize statistics on page load
-        updateStatistics();
     </script>
-
 </body>
 </html>
