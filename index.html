@@ -200,10 +200,7 @@
         }
 
         function autoAddTime(minutes) {
-            let today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today;
-            document.getElementById('minutes').value = minutes;
-            addOrUpdateData();
+            addStudyTime(minutes);
         }
         
     </script>
