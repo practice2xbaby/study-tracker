@@ -177,8 +177,8 @@
                 clearInterval(stopwatchInterval);
                 running = false;
                 let minutes = Math.floor(elapsedTime / 60000);
-                if (minutes > 0) {
-                    autoAddTime(minutes);
+                if (elapsedTime > 0) {
+                    autoAddTime(elapsedTime);
                 }
             }
         }
@@ -199,10 +199,13 @@
             document.title = `Study Time: ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
-        function autoAddTime(minutes) {
-            addStudyTime(minutes);
+        function autoAddTime(milliseconds) {
+            let totalSeconds = Math.floor(milliseconds / 1000);
+            let minutes = totalSeconds / 60; // Keep decimal precision
+            if (minutes > 0) {
+                addStudyTime(minutes);
+            }
         }
-        
     </script>
 </body>
 </html>
