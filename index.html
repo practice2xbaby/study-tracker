@@ -90,6 +90,30 @@
             }
         });
 
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            try {
+                wakeLock = await navigator.wakeLock.request("screen");
+                console.log("Wake lock is active");
+        
+                // If the wake lock is released unexpectedly (e.g., system power settings)
+                wakeLock.addEventListener("release", () => {
+                    console.log("Wake lock was released");
+                });
+            } catch (err) {
+                console.error(`Wake lock request failed: ${err.message}`);
+            }
+        }
+        
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+                console.log("Wake lock released manually");
+            }
+        }
+        
         function addOrUpdateData(minutesToAdd = 0) {
             const dateInput = document.getElementById('date').value;
             const minutesInput = document.getElementById('minutes').value || 0;
@@ -134,6 +158,7 @@
             isPaused = false;
             startTime = Date.now();
             timerInterval = setInterval(updateTimer, 1000);
+            requestWakeLock(); // Prevent sleep
         }
 
         function updateTimer() {
@@ -169,6 +194,7 @@
         function stopTimer() {
             if (!timerInterval) return;
             clearInterval(timerInterval);
+            releaseWakeLock(); // Allow sleep
             let totalElapsed = Math.floor((Date.now() - startTime) / 1000) / 60;
             document.title = "Study Timer Tracker";
             addStudyTime(totalElapsed);
@@ -221,6 +247,7 @@
                     elapsedTime = Date.now() - startTime;
                     updateStopwatchDisplay();
                 }, 1000);
+                requestWakeLock(); // Prevent sleep
             }
         }
 
@@ -228,6 +255,7 @@
             if (running) {
                 clearInterval(stopwatchInterval);
                 running = false;
+                releaseWakeLock(); // Allow sleep
                 document.title = "Study Timer Tracker";
                 let minutes = Math.floor(elapsedTime / 60000);
                 if (elapsedTime > 0) {
