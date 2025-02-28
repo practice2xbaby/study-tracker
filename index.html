@@ -90,37 +90,44 @@
             }
         });
 
+        let remainingSeconds = 0, isPaused = false;
+
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
-            const hours = parseInt(document.getElementById('timerHours').value) || 0;
-            const minutes = parseInt(document.getElementById('timerMinutes').value) || 0;
-            const seconds = parseInt(document.getElementById('timerSeconds').value) || 0;
-            elapsedSeconds = (hours * 3600) + (minutes * 60) + seconds;
-            if (elapsedSeconds <= 0) { alert("Set a valid timer!"); return; }
+            if (!isPaused) {
+                const hours = parseInt(document.getElementById('timerHours').value) || 0;
+                const minutes = parseInt(document.getElementById('timerMinutes').value) || 0;
+                const seconds = parseInt(document.getElementById('timerSeconds').value) || 0;
+                remainingSeconds = (hours * 3600) + (minutes * 60) + seconds;
+                if (remainingSeconds <= 0) { alert("Set a valid timer!"); return; }
+            }
+            isPaused = false;
             startTime = Date.now();
             timerInterval = setInterval(updateTimer, 1000);
         }
 
         function updateTimer() {
             let now = Date.now();
-            let timePassed = Math.floor((now - startTime) / 1000);
-            let remaining = elapsedSeconds - timePassed;
-            
+            let elapsed = Math.floor((now - startTime) / 1000);
+            let remaining = remainingSeconds - elapsed;
             if (remaining <= 0) {
                 clearInterval(timerInterval);
                 document.getElementById('timerDisplay').textContent = "00:00:00";
-                document.getElementById('timerEndSound').play(); // Play sound
-                addStudyTime(elapsedSeconds / 60);
-                document.title = "Timer Finished!";
                 return;
             }
-        
             let hrs = Math.floor(remaining / 3600);
             let mins = Math.floor((remaining % 3600) / 60);
             let secs = remaining % 60;
-            document.getElementById('timerDisplay').textContent = 
-                `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            document.title = `Timer: ${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            document.getElementById('timerDisplay').textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+
+        function pauseTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                remainingSeconds -= Math.floor((Date.now() - startTime) / 1000);
+                isPaused = true;
+            }
         }
     
         function resetTitle() {
