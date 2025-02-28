@@ -192,8 +192,8 @@
                 running = false;
                 document.title = "Study Timer Tracker";
                 let minutes = Math.floor(elapsedTime / 60000);
-                if (minutes > 0) {
-                    autoAddTime(minutes);
+                if (elapsedTime > 0) {
+                    autoAddTime(elapsedTime);
                 }
                 resetTitle();
             }
