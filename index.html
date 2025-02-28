@@ -90,6 +90,34 @@
             }
         });
 
+        function addOrUpdateData(minutesToAdd = 0) {
+            const dateInput = document.getElementById('date').value;
+            const minutesInput = document.getElementById('minutes').value || 0;
+            
+            if (!dateInput && minutesToAdd === 0) {
+                alert("Please enter a date!");
+                return;
+            }
+            
+            const dateObj = new Date(dateInput);
+            const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}-${dateObj.getFullYear()}`;
+            
+            const existingIndex = studyData.labels.indexOf(formattedDate);
+            let totalMinutes = Number(minutesInput) + minutesToAdd;
+            
+            if (existingIndex !== -1) {
+                studyData.data[existingIndex] += totalMinutes;
+            } else {
+                studyData.labels.push(formattedDate);
+                studyData.data.push(totalMinutes);
+            }
+            
+            localStorage.setItem('studyData', JSON.stringify(studyData));
+            studyChart.data.labels = studyData.labels;
+            studyChart.data.datasets[0].data = studyData.data;
+            studyChart.update();
+        }
+
         let remainingSeconds = 0, isPaused = false;
 
         function startTimer() {
