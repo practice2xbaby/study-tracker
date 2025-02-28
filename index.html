@@ -116,6 +116,8 @@
             studyChart.data.labels = studyData.labels;
             studyChart.data.datasets[0].data = studyData.data;
             studyChart.update();
+        
+            updateStatistics(); // <== Add this line
         }
 
         let remainingSeconds = 0, isPaused = false;
