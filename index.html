@@ -169,6 +169,9 @@
             if (remaining <= 0) {
                 clearInterval(timerInterval);
                 document.getElementById('timerDisplay').textContent = "00:00:00";
+                document.getElementById('timerEndSound').play(); // Play sound
+                addStudyTime(elapsedSeconds / 60);
+                document.title = "Timer Finished!";
                 return;
             }
             let hrs = Math.floor(remaining / 3600);
