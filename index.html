@@ -104,25 +104,39 @@
             let now = Date.now();
             let timePassed = Math.floor((now - startTime) / 1000);
             let remaining = elapsedSeconds - timePassed;
+    
             if (remaining <= 0) {
                 clearInterval(timerInterval);
                 document.getElementById('timerDisplay').textContent = "00:00:00";
+                document.title = "Study Timer Tracker";
                 addStudyTime(elapsedSeconds / 60);
                 return;
             }
+    
             let hrs = Math.floor(remaining / 3600);
             let mins = Math.floor((remaining % 3600) / 60);
             let secs = remaining % 60;
-            document.getElementById('timerDisplay').textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            let formattedTime = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    
+            document.getElementById('timerDisplay').textContent = formattedTime;
+            document.title = `Timer: ${formattedTime}`;
         }
-
+    
+        function resetTitle() {
+            if (!running && !timerInterval) {
+                document.title = "Study Timer Tracker";
+            }
+        }
+    
         function stopTimer() {
             if (!timerInterval) return;
             clearInterval(timerInterval);
             let totalElapsed = Math.floor((Date.now() - startTime) / 1000) / 60;
+            document.title = "Study Timer Tracker";
             addStudyTime(totalElapsed);
+            resetTitle();
         }
-
+        
         function addStudyTime(minutes) {
             let today = new Date();
             let formattedDate = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}-${today.getFullYear()}`;
@@ -176,10 +190,12 @@
             if (running) {
                 clearInterval(stopwatchInterval);
                 running = false;
+                document.title = "Study Timer Tracker";
                 let minutes = Math.floor(elapsedTime / 60000);
-                if (elapsedTime > 0) {
-                    autoAddTime(elapsedTime);
+                if (minutes > 0) {
+                    autoAddTime(minutes);
                 }
+                resetTitle();
             }
         }
 
@@ -195,8 +211,10 @@
             let hours = Math.floor(totalSeconds / 3600);
             let minutes = Math.floor((totalSeconds % 3600) / 60);
             let seconds = totalSeconds % 60;
-            document.getElementById('stopwatch').textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            document.title = `Study Time: ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            let formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+            document.getElementById('stopwatch').textContent = formattedTime;
+            document.title = `Stopwatch: ${formattedTime}`;
         }
 
         function autoAddTime(milliseconds) {
